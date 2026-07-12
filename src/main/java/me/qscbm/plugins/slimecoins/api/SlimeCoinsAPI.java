@@ -1,5 +1,6 @@
 package me.qscbm.plugins.slimecoins.api;
 
+import me.qscbm.plugins.slimecoins.config.ConfigManager;
 import me.qscbm.plugins.slimecoins.data.BalanceRecord;
 import me.qscbm.plugins.slimecoins.data.TransactionLog;
 import me.qscbm.plugins.slimecoins.service.EconomyService;
@@ -13,9 +14,11 @@ import java.util.UUID;
 public class SlimeCoinsAPI {
     private static SlimeCoinsAPI instance;
     private final EconomyService economyService;
+    private final ConfigManager configManager;
 
-    public SlimeCoinsAPI(EconomyService economyService) {
+    public SlimeCoinsAPI(EconomyService economyService, ConfigManager configManager) {
         this.economyService = economyService;
+        this.configManager = configManager;
         instance = this;
     }
 
@@ -71,5 +74,17 @@ public class SlimeCoinsAPI {
 
     public List<TransactionLog> getLogs(UUID uuid, int limit) {
         return economyService.getLogs(uuid, limit);
+    }
+
+    public String getCurrencySymbol() {
+        return configManager.getCurrencySymbol();
+    }
+
+    public String getCurrencyNameSingular() {
+        return configManager.getCurrencyNameSingular();
+    }
+
+    public String getCurrencyNamePlural() {
+        return configManager.getCurrencyNamePlural();
     }
 }

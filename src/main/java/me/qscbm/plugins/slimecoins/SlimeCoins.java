@@ -51,7 +51,7 @@ public final class SlimeCoins extends JavaPlugin {
                 configManager.getMaximumPayment()
         );
 
-        new SlimeCoinsAPI(economyService);
+        new SlimeCoinsAPI(economyService, configManager);
 
         registerCommands();
 

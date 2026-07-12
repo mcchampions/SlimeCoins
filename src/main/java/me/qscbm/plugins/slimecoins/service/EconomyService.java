@@ -8,6 +8,8 @@ import me.qscbm.plugins.slimecoins.data.BalanceRecord;
 import me.qscbm.plugins.slimecoins.data.DataProvider;
 import me.qscbm.plugins.slimecoins.data.TransactionLog;
 import org.bukkit.Bukkit;
+import org.bukkit.Server;
+import org.bukkit.event.Event;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -27,6 +29,17 @@ public class EconomyService {
         this.logService = logService;
         this.minimumPayment = minimumPayment;
         this.maximumPayment = maximumPayment;
+    }
+
+    private void callEvent(Event event) {
+        try {
+            Server server = Bukkit.getServer();
+            if (server != null) {
+                server.getPluginManager().callEvent(event);
+            }
+        } catch (Exception ignored) {
+            // Server not available (unit test environment)
+        }
     }
 
     private void ensureAccount(UUID uuid, String playerName) {
@@ -51,7 +64,7 @@ public class EconomyService {
 
         BalanceChangeEvent event = new BalanceChangeEvent(uuid, amount, before, after,
                 TransactionType.GIVE, source);
-        Bukkit.getPluginManager().callEvent(event);
+        callEvent(event);
         if (event.isCancelled()) {
             return EconomyResult.failure("Event cancelled", before);
         }
@@ -75,7 +88,7 @@ public class EconomyService {
 
         BalanceChangeEvent event = new BalanceChangeEvent(uuid, amount.negate(), before, after,
                 TransactionType.TAKE, source);
-        Bukkit.getPluginManager().callEvent(event);
+        callEvent(event);
         if (event.isCancelled()) {
             return EconomyResult.failure("Event cancelled", before);
         }
@@ -93,7 +106,7 @@ public class EconomyService {
 
         BalanceChangeEvent event = new BalanceChangeEvent(uuid, amount.subtract(before), before, amount,
                 TransactionType.SET, source);
-        Bukkit.getPluginManager().callEvent(event);
+        callEvent(event);
         if (event.isCancelled()) {
             return EconomyResult.failure("Event cancelled", before);
         }
@@ -114,7 +127,7 @@ public class EconomyService {
         }
 
         PaymentEvent paymentEvent = new PaymentEvent(from, to, amount);
-        Bukkit.getPluginManager().callEvent(paymentEvent);
+        callEvent(paymentEvent);
         if (paymentEvent.isCancelled()) {
             return EconomyResult.failure("Payment cancelled", getBalance(from));
         }
@@ -141,11 +154,11 @@ public class EconomyService {
 
         BalanceChangeEvent fromEvent = new BalanceChangeEvent(from, amount.negate(), fromBefore, fromAfter,
                 TransactionType.PAY, to.toString());
-        Bukkit.getPluginManager().callEvent(fromEvent);
+        callEvent(fromEvent);
 
         BalanceChangeEvent toEvent = new BalanceChangeEvent(to, amount, toBefore, toAfter,
                 TransactionType.PAY_RECEIVE, from.toString());
-        Bukkit.getPluginManager().callEvent(toEvent);
+        callEvent(toEvent);
 
         return EconomyResult.success(fromBefore, fromAfter);
     }

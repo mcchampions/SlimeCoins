@@ -1,0 +1,27 @@
+name: SlimeCoins
+version: '${project.version}'
+main: me.qscbm.plugins.slimecoins.SlimeCoins
+api-version: '1.21.11'
+load: POSTWORLD
+authors: [ qscbm187531 ]
+
+softdepend: [ PlaceholderAPI ]
+
+permissions:
+  slimecoins.bal:
+    description: 查看余额
+    default: true
+  slimecoins.pay:
+    description: 向其他玩家支付货币
+    default: true
+  slimecoins.top:
+    description: 查看余额排行榜
+    default: true
+  slimecoins.admin:
+    description: 管理员命令
+    default: op
+
+commands:
+  slimecoins:
+    description: 粘液币主命令
+    aliases: [sc, scoin, scoins, slime]

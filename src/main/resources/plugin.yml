@@ -7,6 +7,11 @@ authors: [ qscbm187531 ]
 
 softdepend: [ PlaceholderAPI ]
 
+libraries:
+  - org.xerial:sqlite-jdbc:3.46.1.0
+  - com.mysql:mysql-connector-j:8.4.0
+  - com.h2database:h2:2.3.230
+
 permissions:
   slimecoins.bal:
     description: 查看余额

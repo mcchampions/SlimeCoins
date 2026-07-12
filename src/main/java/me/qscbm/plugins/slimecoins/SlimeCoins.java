@@ -98,7 +98,12 @@ public final class SlimeCoins extends JavaPlugin {
                     );
                     break;
                 case "H2":
-                    dataProvider = new H2Provider(configManager.getH2File());
+                    String h2Path = configManager.getH2File();
+                    File h2File = new File(h2Path);
+                    if (!h2File.isAbsolute()) {
+                        h2File = new File(getServer().getWorldContainer(), h2Path);
+                    }
+                    dataProvider = new H2Provider(h2File.getAbsolutePath());
                     break;
                 default:
                     dataProvider = new SQLiteProvider(

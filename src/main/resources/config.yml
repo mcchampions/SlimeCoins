@@ -1,0 +1,24 @@
+database:
+  type: SQLITE
+  mysql:
+    host: localhost
+    port: 3306
+    database: slimecoins
+    username: root
+    password: ""
+    useSSL: false
+  h2:
+    file: plugins/SlimeCoins/data/slimecoins
+
+economy:
+  initial-balance: 0.0
+  currency-symbol: "💰"
+  currency-name-singular: "粘液币"
+  currency-name-plural: "粘液币"
+  top-page-size: 10
+  minimum-payment: 0.01
+  maximum-payment: 1000000.0
+
+log:
+  enabled: true
+  max-return-rows: 50

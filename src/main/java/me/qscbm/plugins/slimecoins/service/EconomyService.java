@@ -41,7 +41,7 @@ public class EconomyService {
         }
     }
 
-    private synchronized void ensureAccount(UUID uuid, String playerName) {
+    private void ensureAccount(UUID uuid, String playerName) {
         if (!dataProvider.accountExists(uuid)) {
             dataProvider.createAccount(uuid, playerName);
             if (initialBalance.compareTo(BigDecimal.ZERO) > 0) {
@@ -59,7 +59,7 @@ public class EconomyService {
         return getBalance(uuid).compareTo(amount) >= 0;
     }
 
-    public synchronized EconomyResult deposit(UUID uuid, String playerName, BigDecimal amount,
+    public EconomyResult deposit(UUID uuid, String playerName, BigDecimal amount,
                                   String source, String remark) {
         if (amount.compareTo(BigDecimal.ZERO) <= 0) {
             return EconomyResult.failure("Amount must be positive", getBalance(uuid));
@@ -82,7 +82,7 @@ public class EconomyService {
         return EconomyResult.success(before, after);
     }
 
-    public synchronized EconomyResult withdraw(UUID uuid, String playerName, BigDecimal amount,
+    public EconomyResult withdraw(UUID uuid, String playerName, BigDecimal amount,
                                    String source, String remark) {
         if (amount.compareTo(BigDecimal.ZERO) <= 0) {
             return EconomyResult.failure("Amount must be positive", getBalance(uuid));
@@ -110,7 +110,7 @@ public class EconomyService {
         return EconomyResult.success(before, after);
     }
 
-    public synchronized EconomyResult setBalance(UUID uuid, String playerName, BigDecimal amount,
+    public EconomyResult setBalance(UUID uuid, String playerName, BigDecimal amount,
                                      String source, String remark) {
         if (amount.compareTo(BigDecimal.ZERO) < 0) {
             return EconomyResult.failure("Balance cannot be negative", getBalance(uuid));
@@ -133,7 +133,7 @@ public class EconomyService {
         return EconomyResult.success(before, amount);
     }
 
-    public synchronized EconomyResult pay(UUID from, String fromName, UUID to, String toName, BigDecimal amount) {
+    public EconomyResult pay(UUID from, String fromName, UUID to, String toName, BigDecimal amount) {
         if (from.equals(to)) {
             return EconomyResult.failure("Cannot pay yourself", getBalance(from));
         }

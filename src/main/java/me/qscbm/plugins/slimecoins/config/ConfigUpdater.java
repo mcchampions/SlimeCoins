@@ -29,7 +29,7 @@ public class ConfigUpdater {
 
         if (jarVersion <= diskVersion) return;
 
-        mergeMissing(jarConfig, diskConfig, "");
+        mergeMissing(jarConfig, diskConfig);
         diskConfig.set("config-version", jarVersion);
 
         try {
@@ -42,27 +42,25 @@ public class ConfigUpdater {
         }
     }
 
-    private static void mergeMissing(ConfigurationSection source, ConfigurationSection target, String path) {
+    private static void mergeMissing(ConfigurationSection source, ConfigurationSection target) {
         for (String key : source.getKeys(false)) {
-            String fullKey = path.isEmpty() ? key : path + "." + key;
-
-            if (!target.contains(fullKey, true)) {
+            if (!target.contains(key, true)) {
                 Object value = source.get(key);
                 if (value instanceof ConfigurationSection sourceSection) {
-                    target.createSection(fullKey);
-                    ConfigurationSection targetSection = target.getConfigurationSection(fullKey);
+                    target.createSection(key);
+                    ConfigurationSection targetSection = target.getConfigurationSection(key);
                     if (targetSection != null) {
-                        mergeMissing(sourceSection, targetSection, fullKey);
+                        mergeMissing(sourceSection, targetSection);
                     }
                 } else {
-                    target.set(fullKey, value);
+                    target.set(key, value);
                 }
             } else {
                 Object sourceObj = source.get(key);
                 Object targetObj = target.get(key);
                 if (sourceObj instanceof ConfigurationSection sourceSection
                         && targetObj instanceof ConfigurationSection targetSection) {
-                    mergeMissing(sourceSection, targetSection, fullKey);
+                    mergeMissing(sourceSection, targetSection);
                 }
             }
         }

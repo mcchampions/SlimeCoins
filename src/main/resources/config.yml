@@ -21,6 +21,17 @@ economy:
   minimum-payment: 0.01
   maximum-payment: 1000000.0
 
+mining-rewards:
+  enabled: true
+  blocks:
+    STONE:
+      chance: 0.05
+      min-amount: 0.05
+      max-amount: 0.50
+    DEEPSLATE:
+      chance: 0.03
+      min-amount: 0.03
+      max-amount: 0.56
 
 log:
   enabled: true

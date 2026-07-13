@@ -12,15 +12,14 @@ import java.util.Map;
 
 public class ConfigManager {
     private final JavaPlugin plugin;
-    private FileConfiguration config;
-    private Map<Material, MiningReward> miningRewardsCache;
+    private volatile FileConfiguration config;
+    private volatile Map<Material, MiningReward> miningRewardsCache;
 
     public ConfigManager(JavaPlugin plugin) {
         this.plugin = plugin;
     }
 
     public void load() {
-        plugin.saveDefaultConfig();
         config = plugin.getConfig();
         miningRewardsCache = null;
     }
@@ -44,17 +43,17 @@ public class ConfigManager {
     public String getH2File() { return config.getString("database.h2.file", "plugins/SlimeCoins/data/slimecoins"); }
 
     public BigDecimal getInitialBalance() {
-        return new BigDecimal(config.getString("economy.initial-balance", "0.0"));
+        return parseBigDecimal("economy.initial-balance", "0.0");
     }
     public String getCurrencySymbol() { return config.getString("economy.currency-symbol", "💰"); }
     public String getCurrencyNameSingular() { return config.getString("economy.currency-name-singular", "粘液币"); }
     public String getCurrencyNamePlural() { return config.getString("economy.currency-name-plural", "粘液币"); }
     public int getTopPageSize() { return config.getInt("economy.top-page-size", 10); }
     public BigDecimal getMinimumPayment() {
-        return new BigDecimal(config.getString("economy.minimum-payment", "0.01"));
+        return parseBigDecimal("economy.minimum-payment", "0.01");
     }
     public BigDecimal getMaximumPayment() {
-        return new BigDecimal(config.getString("economy.maximum-payment", "1000000.0"));
+        return parseBigDecimal("economy.maximum-payment", "1000000.0");
     }
 
     public boolean isLogEnabled() { return config.getBoolean("log.enabled", true); }
@@ -77,11 +76,29 @@ public class ConfigManager {
             if (material == null) continue;
 
             double chance = section.getDouble(key + ".chance", 0.0);
-            BigDecimal min = new BigDecimal(section.getString(key + ".min-amount", "1.0"));
-            BigDecimal max = new BigDecimal(section.getString(key + ".max-amount", "10.0"));
+            BigDecimal min = parseBigDecimalFromSection(section, key + ".min-amount", "1.0");
+            BigDecimal max = parseBigDecimalFromSection(section, key + ".max-amount", "10.0");
             rewards.put(material, new MiningReward(chance, min, max));
         }
         miningRewardsCache = rewards;
         return miningRewardsCache;
+    }
+
+    private BigDecimal parseBigDecimal(String path, String def) {
+        try {
+            return new BigDecimal(config.getString(path, def));
+        } catch (Exception e) {
+            plugin.getLogger().warning("Invalid value for " + path + ", using default " + def);
+            return new BigDecimal(def);
+        }
+    }
+
+    private BigDecimal parseBigDecimalFromSection(ConfigurationSection section, String path, String def) {
+        try {
+            return new BigDecimal(section.getString(path, def));
+        } catch (Exception e) {
+            plugin.getLogger().warning("Invalid value for " + path + ", using default " + def);
+            return new BigDecimal(def);
+        }
     }
 }

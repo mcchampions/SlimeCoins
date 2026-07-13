@@ -42,7 +42,7 @@ class EconomyServiceTest {
         CacheManager cacheManager = new CacheManager(mockProvider);
         LogService logService = new LogService(mockProvider, true);
         economyService = new EconomyService(mockProvider, cacheManager, logService,
-                new BigDecimal("0.01"), new BigDecimal("1000000.00"));
+                new BigDecimal("0.01"), new BigDecimal("1000000.00"), BigDecimal.ZERO);
     }
 
     @Test

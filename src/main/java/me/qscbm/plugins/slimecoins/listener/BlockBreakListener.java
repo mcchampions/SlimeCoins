@@ -37,7 +37,7 @@ public class BlockBreakListener implements Listener {
         MiningReward reward = rewards.get(block);
         if (reward == null) return;
 
-        if (random.nextDouble() >= reward.chance()) return;
+        if (random.nextDouble() > reward.chance()) return;
 
         BigDecimal min = reward.minAmount();
         BigDecimal max = reward.maxAmount();

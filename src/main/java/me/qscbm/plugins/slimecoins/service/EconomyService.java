@@ -20,14 +20,17 @@ public class EconomyService {
     private final LogService logService;
     private final BigDecimal minimumPayment;
     private final BigDecimal maximumPayment;
+    private final BigDecimal initialBalance;
 
     public EconomyService(DataProvider dataProvider, CacheManager cacheManager,
-                          LogService logService, BigDecimal minimumPayment, BigDecimal maximumPayment) {
+                          LogService logService, BigDecimal minimumPayment, BigDecimal maximumPayment,
+                          BigDecimal initialBalance) {
         this.dataProvider = dataProvider;
         this.cacheManager = cacheManager;
         this.logService = logService;
         this.minimumPayment = minimumPayment;
         this.maximumPayment = maximumPayment;
+        this.initialBalance = initialBalance;
     }
 
     private void callEvent(Event event) {
@@ -41,6 +44,10 @@ public class EconomyService {
     private synchronized void ensureAccount(UUID uuid, String playerName) {
         if (!dataProvider.accountExists(uuid)) {
             dataProvider.createAccount(uuid, playerName);
+            if (initialBalance.compareTo(BigDecimal.ZERO) > 0) {
+                dataProvider.updateBalance(uuid, playerName, initialBalance);
+                cacheManager.updateBalance(uuid, initialBalance);
+            }
         }
     }
 
@@ -52,7 +59,7 @@ public class EconomyService {
         return getBalance(uuid).compareTo(amount) >= 0;
     }
 
-    public EconomyResult deposit(UUID uuid, String playerName, BigDecimal amount,
+    public synchronized EconomyResult deposit(UUID uuid, String playerName, BigDecimal amount,
                                   String source, String remark) {
         if (amount.compareTo(BigDecimal.ZERO) <= 0) {
             return EconomyResult.failure("Amount must be positive", getBalance(uuid));
@@ -75,7 +82,7 @@ public class EconomyService {
         return EconomyResult.success(before, after);
     }
 
-    public EconomyResult withdraw(UUID uuid, String playerName, BigDecimal amount,
+    public synchronized EconomyResult withdraw(UUID uuid, String playerName, BigDecimal amount,
                                    String source, String remark) {
         if (amount.compareTo(BigDecimal.ZERO) <= 0) {
             return EconomyResult.failure("Amount must be positive", getBalance(uuid));
@@ -103,7 +110,7 @@ public class EconomyService {
         return EconomyResult.success(before, after);
     }
 
-    public EconomyResult setBalance(UUID uuid, String playerName, BigDecimal amount,
+    public synchronized EconomyResult setBalance(UUID uuid, String playerName, BigDecimal amount,
                                      String source, String remark) {
         if (amount.compareTo(BigDecimal.ZERO) < 0) {
             return EconomyResult.failure("Balance cannot be negative", getBalance(uuid));

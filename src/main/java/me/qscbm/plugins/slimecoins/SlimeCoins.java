@@ -32,9 +32,17 @@ public final class SlimeCoins extends JavaPlugin {
     public void onEnable() {
         getDataFolder().mkdirs();
 
-        ConfigUpdater.update(this, "config.yml", new File(getDataFolder(), "config.yml"));
-        ConfigUpdater.update(this, "messages.yml", new File(getDataFolder(), "messages.yml"));
+        // Create defaults if missing
+        File configFile = new File(getDataFolder(), "config.yml");
+        File messagesFile = new File(getDataFolder(), "messages.yml");
+        if (!configFile.exists()) saveResource("config.yml", false);
+        if (!messagesFile.exists()) saveResource("messages.yml", false);
 
+        // Merge missing keys from newer jar version
+        ConfigUpdater.update(this, "config.yml", configFile);
+        ConfigUpdater.update(this, "messages.yml", messagesFile);
+
+        // Load configs
         configManager = new ConfigManager(this);
         configManager.load();
 
@@ -55,7 +63,8 @@ public final class SlimeCoins extends JavaPlugin {
                 cacheManager,
                 logService,
                 configManager.getMinimumPayment(),
-                configManager.getMaximumPayment()
+                configManager.getMaximumPayment(),
+                configManager.getInitialBalance()
         );
 
         SlimeCoinsAPI api = new SlimeCoinsAPI(economyService, configManager);

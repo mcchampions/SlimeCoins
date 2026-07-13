@@ -70,7 +70,7 @@ public final class SlimeCoins extends JavaPlugin {
         SlimeCoinsAPI api = new SlimeCoinsAPI(economyService, configManager);
 
         registerCommands();
-        getServer().getPluginManager().registerEvents(new BlockBreakListener(configManager, api), this);
+        getServer().getPluginManager().registerEvents(new BlockBreakListener(configManager, messageConfig, api), this);
 
         if (Bukkit.getPluginManager().getPlugin("PlaceholderAPI") != null) {
             new SlimeCoinsExpansion(economyService).register();

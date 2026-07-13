@@ -1,4 +1,4 @@
-config-version: 1
+config-version: 2
 
 messages:
   no-permission: "&c你没有权限使用此命令！"
@@ -26,3 +26,4 @@ messages:
   check-entry: "&7#%id% &e%type% &a%amount% %symbol% &7(%date%) &8%remark%"
   check-empty: "&7暂无流水记录。"
   error-internal: "&c内部错误，请联系管理员。"
+  mining-reward: "&a+ %amount% 粘液币"

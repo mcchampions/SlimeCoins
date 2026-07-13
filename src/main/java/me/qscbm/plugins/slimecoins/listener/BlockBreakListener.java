@@ -3,6 +3,7 @@ package me.qscbm.plugins.slimecoins.listener;
 import me.qscbm.plugins.slimecoins.api.EconomyResult;
 import me.qscbm.plugins.slimecoins.api.SlimeCoinsAPI;
 import me.qscbm.plugins.slimecoins.config.ConfigManager;
+import me.qscbm.plugins.slimecoins.config.MessageConfig;
 import me.qscbm.plugins.slimecoins.config.MiningReward;
 import org.bukkit.GameMode;
 import org.bukkit.Material;
@@ -18,11 +19,13 @@ import java.util.Random;
 
 public class BlockBreakListener implements Listener {
     private final ConfigManager configManager;
+    private final MessageConfig messages;
     private final SlimeCoinsAPI api;
     private final Random random = new Random();
 
-    public BlockBreakListener(ConfigManager configManager, SlimeCoinsAPI api) {
+    public BlockBreakListener(ConfigManager configManager, MessageConfig messages, SlimeCoinsAPI api) {
         this.configManager = configManager;
+        this.messages = messages;
         this.api = api;
     }
 
@@ -50,7 +53,12 @@ public class BlockBreakListener implements Listener {
         Player player = event.getPlayer();
         EconomyResult result = api.deposit(player.getUniqueId(), amount, "mining");
         if (result.isSuccess()) {
-            player.sendMessage("§a+ " + amount.toPlainString() + " " + api.getCurrencySymbol());
+            String msg = messages.get("mining-reward")
+                    .replace("%amount%", amount.toPlainString())
+                    .replace("%symbol%", api.getCurrencySymbol());
+            if (!msg.isEmpty()) {
+                player.sendMessage(msg);
+            }
         }
     }
 }

@@ -8,7 +8,6 @@ import me.qscbm.plugins.slimecoins.data.BalanceRecord;
 import me.qscbm.plugins.slimecoins.data.DataProvider;
 import me.qscbm.plugins.slimecoins.data.TransactionLog;
 import org.bukkit.Bukkit;
-import org.bukkit.Server;
 import org.bukkit.event.Event;
 
 import java.math.BigDecimal;
@@ -33,16 +32,13 @@ public class EconomyService {
 
     private void callEvent(Event event) {
         try {
-            Server server = Bukkit.getServer();
-            if (server != null) {
-                server.getPluginManager().callEvent(event);
-            }
+            Bukkit.getPluginManager().callEvent(event);
         } catch (Exception ignored) {
-            // Server not available (unit test environment)
+            // Server not available (unit test environment) or listener threw
         }
     }
 
-    private void ensureAccount(UUID uuid, String playerName) {
+    private synchronized void ensureAccount(UUID uuid, String playerName) {
         if (!dataProvider.accountExists(uuid)) {
             dataProvider.createAccount(uuid, playerName);
         }
@@ -58,6 +54,10 @@ public class EconomyService {
 
     public EconomyResult deposit(UUID uuid, String playerName, BigDecimal amount,
                                   String source, String remark) {
+        if (amount.compareTo(BigDecimal.ZERO) <= 0) {
+            return EconomyResult.failure("Amount must be positive", getBalance(uuid));
+        }
+
         ensureAccount(uuid, playerName);
         BigDecimal before = getBalance(uuid);
         BigDecimal after = before.add(amount);
@@ -77,6 +77,10 @@ public class EconomyService {
 
     public EconomyResult withdraw(UUID uuid, String playerName, BigDecimal amount,
                                    String source, String remark) {
+        if (amount.compareTo(BigDecimal.ZERO) <= 0) {
+            return EconomyResult.failure("Amount must be positive", getBalance(uuid));
+        }
+
         ensureAccount(uuid, playerName);
         BigDecimal before = getBalance(uuid);
 
@@ -101,10 +105,15 @@ public class EconomyService {
 
     public EconomyResult setBalance(UUID uuid, String playerName, BigDecimal amount,
                                      String source, String remark) {
+        if (amount.compareTo(BigDecimal.ZERO) < 0) {
+            return EconomyResult.failure("Balance cannot be negative", getBalance(uuid));
+        }
+
         ensureAccount(uuid, playerName);
         BigDecimal before = getBalance(uuid);
+        BigDecimal delta = amount.subtract(before);
 
-        BalanceChangeEvent event = new BalanceChangeEvent(uuid, amount.subtract(before), before, amount,
+        BalanceChangeEvent event = new BalanceChangeEvent(uuid, delta, before, amount,
                 TransactionType.SET, source);
         callEvent(event);
         if (event.isCancelled()) {
@@ -113,11 +122,11 @@ public class EconomyService {
 
         dataProvider.updateBalance(uuid, playerName, amount);
         cacheManager.updateBalance(uuid, amount);
-        logService.logSet(uuid, playerName, amount, source, amount, remark);
+        logService.logSet(uuid, playerName, delta, source, amount, remark);
         return EconomyResult.success(before, amount);
     }
 
-    public EconomyResult pay(UUID from, String fromName, UUID to, String toName, BigDecimal amount) {
+    public synchronized EconomyResult pay(UUID from, String fromName, UUID to, String toName, BigDecimal amount) {
         if (from.equals(to)) {
             return EconomyResult.failure("Cannot pay yourself", getBalance(from));
         }
@@ -126,23 +135,41 @@ public class EconomyService {
             return EconomyResult.failure("Amount out of range", getBalance(from));
         }
 
-        PaymentEvent paymentEvent = new PaymentEvent(from, to, amount);
-        callEvent(paymentEvent);
-        if (paymentEvent.isCancelled()) {
-            return EconomyResult.failure("Payment cancelled", getBalance(from));
+        if (amount.compareTo(BigDecimal.ZERO) <= 0) {
+            return EconomyResult.failure("Amount must be positive", getBalance(from));
         }
+
+        ensureAccount(from, fromName);
+        ensureAccount(to, toName);
 
         BigDecimal fromBefore = getBalance(from);
         if (fromBefore.compareTo(amount) < 0) {
             return EconomyResult.failure("Insufficient funds", fromBefore);
         }
 
-        ensureAccount(from, fromName);
-        ensureAccount(to, toName);
-
-        BigDecimal fromAfter = fromBefore.subtract(amount);
         BigDecimal toBefore = getBalance(to);
+        BigDecimal fromAfter = fromBefore.subtract(amount);
         BigDecimal toAfter = toBefore.add(amount);
+
+        PaymentEvent paymentEvent = new PaymentEvent(from, to, amount);
+        callEvent(paymentEvent);
+        if (paymentEvent.isCancelled()) {
+            return EconomyResult.failure("Payment cancelled", fromBefore);
+        }
+
+        BalanceChangeEvent fromEvent = new BalanceChangeEvent(from, amount.negate(), fromBefore, fromAfter,
+                TransactionType.PAY, to.toString());
+        callEvent(fromEvent);
+        if (fromEvent.isCancelled()) {
+            return EconomyResult.failure("Payment cancelled by listener", fromBefore);
+        }
+
+        BalanceChangeEvent toEvent = new BalanceChangeEvent(to, amount, toBefore, toAfter,
+                TransactionType.PAY_RECEIVE, from.toString());
+        callEvent(toEvent);
+        if (toEvent.isCancelled()) {
+            return EconomyResult.failure("Payment cancelled by listener", fromBefore);
+        }
 
         dataProvider.updateBalance(from, fromName, fromAfter);
         cacheManager.updateBalance(from, fromAfter);
@@ -151,14 +178,6 @@ public class EconomyService {
         dataProvider.updateBalance(to, toName, toAfter);
         cacheManager.updateBalance(to, toAfter);
         logService.logPayReceive(to, toName, amount, from.toString(), toAfter);
-
-        BalanceChangeEvent fromEvent = new BalanceChangeEvent(from, amount.negate(), fromBefore, fromAfter,
-                TransactionType.PAY, to.toString());
-        callEvent(fromEvent);
-
-        BalanceChangeEvent toEvent = new BalanceChangeEvent(to, amount, toBefore, toAfter,
-                TransactionType.PAY_RECEIVE, from.toString());
-        callEvent(toEvent);
 
         return EconomyResult.success(fromBefore, fromAfter);
     }

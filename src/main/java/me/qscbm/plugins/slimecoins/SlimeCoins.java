@@ -4,12 +4,14 @@ import me.qscbm.plugins.slimecoins.api.SlimeCoinsAPI;
 import me.qscbm.plugins.slimecoins.command.SlimeCoinsCommand;
 import me.qscbm.plugins.slimecoins.command.sub.*;
 import me.qscbm.plugins.slimecoins.config.ConfigManager;
+import me.qscbm.plugins.slimecoins.config.ConfigUpdater;
 import me.qscbm.plugins.slimecoins.config.MessageConfig;
 import me.qscbm.plugins.slimecoins.data.DataProvider;
 import me.qscbm.plugins.slimecoins.data.impl.H2Provider;
 import me.qscbm.plugins.slimecoins.data.impl.MySQLProvider;
 import me.qscbm.plugins.slimecoins.data.impl.SQLiteProvider;
 import me.qscbm.plugins.slimecoins.expansion.SlimeCoinsExpansion;
+import me.qscbm.plugins.slimecoins.listener.BlockBreakListener;
 import me.qscbm.plugins.slimecoins.service.CacheManager;
 import me.qscbm.plugins.slimecoins.service.EconomyService;
 import me.qscbm.plugins.slimecoins.service.LogService;
@@ -28,6 +30,11 @@ public final class SlimeCoins extends JavaPlugin {
 
     @Override
     public void onEnable() {
+        getDataFolder().mkdirs();
+
+        ConfigUpdater.update(this, "config.yml", new File(getDataFolder(), "config.yml"));
+        ConfigUpdater.update(this, "messages.yml", new File(getDataFolder(), "messages.yml"));
+
         configManager = new ConfigManager(this);
         configManager.load();
 
@@ -51,9 +58,10 @@ public final class SlimeCoins extends JavaPlugin {
                 configManager.getMaximumPayment()
         );
 
-        new SlimeCoinsAPI(economyService, configManager);
+        SlimeCoinsAPI api = new SlimeCoinsAPI(economyService, configManager);
 
         registerCommands();
+        getServer().getPluginManager().registerEvents(new BlockBreakListener(configManager, api), this);
 
         if (Bukkit.getPluginManager().getPlugin("PlaceholderAPI") != null) {
             new SlimeCoinsExpansion(economyService).register();

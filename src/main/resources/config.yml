@@ -1,3 +1,5 @@
+config-version: 1
+
 database:
   type: SQLITE
   mysql:
@@ -18,6 +20,18 @@ economy:
   top-page-size: 10
   minimum-payment: 0.01
   maximum-payment: 1000000.0
+
+mining-rewards:
+  enabled: false
+  blocks:
+    STONE:
+      chance: 0.05
+      min-amount: 1.0
+      max-amount: 10.0
+    DEEPSLATE:
+      chance: 0.08
+      min-amount: 2.0
+      max-amount: 15.0
 
 log:
   enabled: true

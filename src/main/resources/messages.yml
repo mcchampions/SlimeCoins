@@ -1,3 +1,5 @@
+config-version: 1
+
 messages:
   no-permission: "&c你没有权限使用此命令！"
   player-only: "&c该命令只能由玩家执行！"

@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.UUID;
 
 public class SlimeCoinsAPI {
-    private static SlimeCoinsAPI instance;
+    private static volatile SlimeCoinsAPI instance;
     private final EconomyService economyService;
     private final ConfigManager configManager;
 

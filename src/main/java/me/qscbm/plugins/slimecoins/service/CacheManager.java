@@ -34,10 +34,10 @@ public class CacheManager {
     }
 
     public void loadPlayer(UUID uuid) {
-        if (!cache.containsKey(uuid)) {
-            BigDecimal balance = dataProvider.getBalance(uuid);
-            cache.put(uuid, balance != null ? balance : BigDecimal.ZERO);
-        }
+        cache.computeIfAbsent(uuid, id -> {
+            BigDecimal balance = dataProvider.getBalance(id);
+            return balance != null ? balance : BigDecimal.ZERO;
+        });
     }
 
     public void clear() {

@@ -49,6 +49,12 @@ public class MySQLProvider implements DataProvider {
                     "balance_after DECIMAL(20,2) NOT NULL, " +
                     "remark VARCHAR(255) DEFAULT '', " +
                     "created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)");
+        } catch (SQLException e) {
+            if (connection != null && !connection.isClosed()) {
+                connection.close();
+            }
+            connection = null;
+            throw e;
         }
     }
 
@@ -182,3 +188,4 @@ public class MySQLProvider implements DataProvider {
         return records;
     }
 }
+
